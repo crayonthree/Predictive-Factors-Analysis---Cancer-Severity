@@ -1,0 +1,179 @@
+---
+title: "Predictive Factors Analysis: Cancer Severity"
+author: "Team 22: Abhiroop, Om, Wasi"
+date: "2024-04-16"
+format: revealjs
+---
+
+```{r include=FALSE, messages=FALSE, warning=FALSE}
+library(tidyverse)
+library(here)
+library(dlookr)
+library(dplyr)
+library(corrplot)
+library(tidyverse)
+library(kableExtra)
+library(ggfortify)
+library(ggplot2)
+
+#Reading in the data
+data = read.table(here::here("data","wdbc.data"), header=FALSE, sep=",")
+
+#Assigning column names
+colnames(data) = c("id","diagnosis","radius_mean","texture_mean","perimeter_mean","area_mean","smoothness_mean","compactness_mean","concavity_mean","concave points_mean","symmetry_mean","fractal_dimension_mean","radius_se","texture_se","perimeter_se","area_se","smoothness_se","compactness_se","concavity_se","concave points_se","symmetry_se","fractal_dimension_se","radius_worst","texture_worst","perimeter_worst","area_worst","smoothness_worst","compactness_worst","concavity_worst","concave points_worst","symmetry_worst","fractal_dimension_worst")
+```
+
+## Goals
+
+- Using visual explorations to highlight strongest indicators of cancer severity.
+- Explore correlations between size-related features and cancer severity.
+- Use scatterplots to draw additional insights between severity and features.
+
+## Data Introduction
+
+- The dataset contains characteristics of cell nuclei in patients diagnosed with breast cancer. Labelled as Malignant or Benign.
+- The features from the dataset are visual characteristics of the cancer cell nuclei. 
+- Each feature has 3 columns for mean, standard error, and worse value out of all cancer cell nuclei.
+- Features are computed from a digitized image of a fine needle aspirate (FNA) of cell nuclei in a breast mass. Collected by University of Wisconsin (1995).
+
+
+## Data Preprocessing
+
+We considered a few aspects for data preprocessing:
+
+- Converting the target variable to a categorical numeric entity.
+- Processing missing values (No missing values)
+- Processing outliers (Removing low correlation features)
+- Removing spaces from feature names
+
+```{r, echo=FALSE}
+#Mapping 'B' to 0 and 'M' to 1.
+data$diagnosis <- factor(data$diagnosis, levels=c('B','M'), labels=c(0,1))
+
+#Converting the column to numeric
+data$diagnosis <- as.numeric(data$diagnosis)
+
+#Removing smoothness_se from the dataset
+data <- subset(data,select = -c(smoothness_se))
+
+#changing the names of the variables to remove spaces
+names(data)[names(data) == "concave points_mean"] <- "concave_points_mean"
+names(data)[names(data) == "concave points_se"] <- "concave_points_se"
+names(data)[names(data) == "concave points_worst"] <- "concave_points_worst"
+```
+
+## Dataset Specifics
+
+- There are 569 observations in the dataset.
+- Main features: radius, texture, perimeter, area, compactness, concavity, concave points, and diagnosis (target) - most correlated features (pearson coefficient >|+-0.4|)
+```{r}
+#| echo: false
+#| fig-width: 9
+#| fig-height: 3.5
+#| fig.align: center
+#Histogram of counts
+ggplot(data, aes(diagnosis)) + geom_bar()
+```
+
+## Correlation Plot (All Features)
+
+```{r}
+#| echo: false
+#| fig-width: 10
+#| fig-height: 7
+#| fig.align: center
+corrplot(cor(data[,c("id","diagnosis","radius_mean","radius_se","radius_worst","texture_mean","texture_se","texture_worst","perimeter_mean","perimeter_se","perimeter_worst","area_mean","area_se","area_worst","smoothness_mean","smoothness_worst","compactness_mean","compactness_se","compactness_worst","concavity_mean","concavity_se","concavity_worst","concave_points_mean","concave_points_se","concave_points_worst","symmetry_mean","symmetry_se","symmetry_worst","fractal_dimension_mean","fractal_dimension_se","fractal_dimension_worst")], method="pearson"), type = "upper", method="square", title = "Correlation Plot for All Features and Cancer Severity (diagnosis)",number.cex = 0.8, tl.cex = 0.8, mar=c(0,0,2,0))
+```
+
+## PCA (Most Correlated Features vs Diagnosis) - 1
+
+```{r, echo=FALSE, out.height="40%", fig.align="center"}
+
+#Principal Component Analysis using the features most correlated with diagnosis
+pca1 = prcomp(data |> dplyr::select("radius_mean", "texture_mean", "perimeter_mean", "area_mean", "compactness_mean", "concavity_mean", "concave_points_mean", "radius_se", "perimeter_se", "area_se", "concave_points_se", "radius_worst", "texture_worst", "perimeter_worst", "area_worst", "smoothness_worst", "compactness_worst", "concavity_worst", "concave_points_worst", "symmetry_worst"), scale=TRUE)
+autoplot(pca1, data=data, loadings=TRUE, loadings.label=TRUE, colour='diagnosis')
+```
+
+
+## PCA (Most Correlated Features vs Diagnosis) - 2
+
+```{r, echo=FALSE}
+pca1$rotation
+```
+
+## Linear Model
+
+```{r,echo=FALSE}
+
+#Linear Model with all the diagnosis as the predictor variable, with all the cancer severity data.
+l1 <- lm(diagnosis ~ radius_mean + texture_mean + perimeter_mean + area_mean + compactness_mean + concavity_mean + concave_points_mean + radius_se + perimeter_se + area_se + concave_points_se + radius_worst + texture_worst + perimeter_worst + area_worst + smoothness_worst + compactness_worst + concavity_worst + concave_points_worst + symmetry_worst, data=data)
+l1_summary <- summary(l1)
+l1_summary
+```
+
+## Correlation Plot (Size-Related Features)
+
+```{r, echo=FALSE, out.height="30%", fig.align="center"}
+corrplot(cor(data[,c("radius_mean","radius_se","radius_worst","perimeter_mean","perimeter_se","perimeter_worst","area_mean","area_se","area_worst","diagnosis")], method="pearson"), type = "upper", method="number", title = "Correlation Plot for Size Related Features and Cancer Severity (diagnosis)",number.cex = 1.4, tl.cex = 0.8, mar=c(0,0,2,0))
+```
+
+# Additional Insights (Malignant vs Benign)
+
+## Texture Mean vs Radius Mean
+-   Malignant Tumors have a texture mean and radius mean around the median, whereas benign tumors have a texture mean and radius mean closer to lower end of their ranges.
+
+```{r}
+#| echo: false
+#| fig-width: 9
+#| fig-height: 3
+#| fig.align: center
+ggplot(data, aes(x = texture_mean, y = radius_mean, color = diagnosis)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE) +
+  labs(title = "Scatterplot of Texture Mean vs. Radius Mean",
+       x = "Texture Mean", y = "Radius Mean") +
+  theme_minimal()
+```
+
+## Concavity Mean vs Compactness Mean
+-   Malignant tumors fall near the median, and benign fall closer to the lower end of the range  for both.
+```{r}
+#| echo: false
+#| fig-width: 9
+#| fig-height: 3.5
+#| fig.align: center
+ggplot(data, aes(x = concavity_mean, y = compactness_mean , color = diagnosis)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = TRUE) +
+  labs(title = "Scatterplot of Concavity Mean vs. Compactness Mean",
+       x = "Concavity Mean", y = "Compactness Mean") +
+  theme_minimal()
+```
+
+## Radius Mean vs Concavity Mean
+-   Benign tumors have radius mean and concavity mean near the lower end of the range.
+```{r}
+#| echo: false
+#| fig-width: 9
+#| fig-height: 4
+#| fig.align: center
+ggplot(data, aes(x = radius_mean, y = concavity_mean , color = diagnosis)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = TRUE) +
+  labs(title = "Scatterplot of Radius Mean vs. Concavity Mean",
+       x = "Radius Mean", y = "Concavity Mean") +
+  theme_minimal()
+```
+
+## Conclusion
+
+- We consider linear models for combination of features and PCA to narrow down features. Based on these we think radius, perimeter, area, and smoothness are the strongest indicators of cancer severity based on visual explorations.
+- All size-related features have a moderate to high correlation with diagnosis (>0.69 pearson coefficient), with the SE columns for all features having moderate correlations. This can be attributed to an outliers_ratio > 5 for these columns.
+- Scatterplots have helped determine numerous insights and relationships between cancer severity and features.
+
+## Future Work
+- Using A bigger dataset.
+- Finding better ways of dealing with outliers.
+- Resolving issues with boxplots due to limited target variable values.
+- Exploring more depth in Principal Components
+- Exploring additional trends with scatterplots and correlations.
