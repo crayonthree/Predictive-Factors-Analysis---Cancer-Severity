@@ -1,0 +1,162 @@
+---
+title: "Project proposal"
+author: "Abhiroop Yerramilli, Om Pandya, Wasi Alavi"
+date: "2024-03-07"
+output: html_document
+---
+
+```{r}
+install.packages("here", repos='http://cran.us.r-project.org')
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+```
+
+
+## Questions to be investigated  
+
+Using the data there are a few questions we want to investigate with our visualizations:  
+- Which of the listed features are the strongest indicators of cancer severity, based on visual explorations?  
+- Which features show strong correlations with each other, and how might these correlations differ between benign and malignant cancer.  
+- How do the size-related features (radius, perimeter, area) correlate with the severity (malignant status) of the tumors?  
+
+Note: Our response variable here is "diagnosis".  
+
+## Data to be used  
+
+The dataset we are using contains characteristics of patients diagnosed with breast cancer. The dataset is under a CC BY-NC-SA 4.0 License.  
+First we read the dataset in, and get the summary before additional description.  
+
+```{r}
+my_data = read.table(here::here("data","wdbc.data"), header=FALSE, sep=",")
+colnames(my_data) = c("id","diagnosis","radius_mean","texture_mean","perimeter_mean","area_mean","smoothness_mean","compactness_mean","concavity_mean","concave points_mean","symmetry_mean","fractal_dimension_mean","radius_se","texture_se","perimeter_se","area_se","smoothness_se","compactness_se","concavity_se","concave points_se","symmetry_se","fractal_dimension_se","radius_worst","texture_worst","perimeter_worst","area_worst","smoothness_worst","compactness_worst","concavity_worst","concave points_worst","symmetry_worst","fractal_dimension_worst")
+
+summary(my_data)
+```
+Based on the summary we can first elaborate on the characteristics of the dataset.   
+
+1. The dataset has 12 main features (with descriptions)
+
+The first 2 main features are:  
+id (numeric): unique ID of each patient.  
+diagnosis (character): type of cancer. It is either "M" (Malignant Cancer) or "B" (Benign Cancer)  
+> Each of these 2 features correspond to one column each.  
+> No units for any as id and diagnosis do not have units here.  
+
+The rest of the 10 main features describe the visual characteristics of the cancer cell-nucleus:  
+  - radius (numeric)  
+  - texture (numeric): Calculation of deviation of gray-scale values  
+  - perimeter (numeric)  
+  - area (numeric)  
+  - smoothness (numeric): Local variation in radius  
+  - compactness (numeric): perimeter^2 / area - 1.0 
+  - concavity (numeric): severity of concave portions of the contour  
+  - concave points (numeric): number of concave portions of the contour  
+  - symmetry (numeric)   
+  - fractal_dimension (numeric): "coastline approximation" - 1  
+    Note: coastline approximation is a method used to estimate the fractal dimension of an irregularly shaped body by comparing measured length with different scales.  
+> Each of these features correspond to 3 columns each (mean over all cells, standard error over all cells, worst of all cells)  
+> Each of the 3 columns corresponding to above 10 features are numeric.  
+> Neither the paper, or the dataset talks about the different units in place here. We have reached out to one of the contributors on the dataset for more information.  
+
+2. Data Quality and Observations:  
+
+The data quality is fairly rich:  
+  - No missing observations.  
+  - All features have 4 significant digits (where valid)  
+  - 569 observations  
+  - The data is fairly balanced in terms of Malignant (37%) and Benign (63%).  
+
+Only one column is in character terms, otherwise we only have numerical columns. We want to convert this character column into a numerical column (0,1) for (benign, malignant) cancer types.  
+
+3. Data Collection and Ownership:  
+
+- Title: Wisconsin Diagnostic Breast Cancer (WDBC)  
+
+- Source Information  
+
+a) Creators:   
+
+	Dr. William H. Wolberg, General Surgery Dept., University of
+	Wisconsin,  Clinical Sciences Center, Madison, WI 53792
+	wolberg@eagle.surgery.wisc.edu  
+
+	W. Nick Street, Computer Sciences Dept., University of
+	Wisconsin, 1210 West Dayton St., Madison, WI 53706
+	street@cs.wisc.edu  608-262-6619  
+
+	Olvi L. Mangasarian, Computer Sciences Dept., University of
+	Wisconsin, 1210 West Dayton St., Madison, WI 53706
+	olvi@cs.wisc.edu   
+
+b) Donor: Nick Street  
+
+c) Date: November 1995  
+  
+- Collection Method  
+
+  Features are computed from a digitized image of a fine needle
+	aspirate (FNA) of a breast mass.  They describe
+	characteristics of the cell nuclei present in the image.
+	A few of the images can be found at
+	http://www.cs.wisc.edu/~street/images/  
+
+	Separating plane described above was obtained using
+	Multisurface Method-Tree (MSM-T) [K. P. Bennett, "Decision Tree
+	Construction Via Linear Programming." Proceedings of the 4th
+	Midwest Artificial Intelligence and Cognitive Science Society,
+	pp. 97-101, 1992], a classification method which uses linear
+	programming to construct a decision tree.  Relevant features
+	were selected using an exhaustive search in the space of 1-4
+	features and 1-3 separating planes.  
+
+	The actual linear program used to obtain the separating plane
+	in the 3-dimensional space is that described in:
+	[K. P. Bennett and O. L. Mangasarian: "Robust Linear
+	Programming Discrimination of Two Linearly Inseparable Sets",
+	Optimization Methods and Software 1, 1992, 23-34].  
+
+## Ideas for visualization  
+
+Visualizations planned:  
+- General summary table of all the features.  
+- Correlation matrix to highlight the relationships between variables, specifically th+
+e response variable with the predictor variables.  
+- Boxplots to compare relationships between the response variable and the predictor variables based on if the diagnosis is benign or malignant.  
+- We want to use LOESS smoothing for scatterplots.  
+- We want to use GAM when modelling the relationship between the response variable and the predictor variables.  
+- We want to use PCA because while we have a lot of variable with potentially significant correlations, all of them would not be equally useful or that useful. PCA will be helpful in determining the amount of variation, hence being able to weed out the less important variables. Mainly to reduce dimensions.   
+
+Relation to our planned questions:  
+- Correlations will be key to almost all questions.  
+- Reducing dimensions would help narrow down the most important predictor variables, making modelling more efficient.  
+- Smoothing will help highlight a better relationship alongside PCA.  
+- Boxplots to differ between benign and malignant relationships with data.  
+
+## Team planning  
+
+Team: Abhiroop Yerramilli, Om Pandya, Wasi Alavi  
+
+We are all going to analyze the same data except experimenting with standardized and non-standardized data from this dataset.  
+
+Abhiroop will make the initial boxplots and correlation matriced. Om will compare box plots and the correlation matrices of both original and standardized data. Wasi will work on modelling using the correlations from Abhiroop and Om. Abhiroop will then use PCA to reduce the dimensions. Om will use the reduced dimensions for modelling. Wasi will compare the non-reduced modelling and the reduced modelling. Throughout our tasks we will keep a set of notes and a document which will become our final report. We will divide the smoothing and final clean up. Then Om will work on identifying key aspects and making a note of them. Abhiroop and Wasi will work on drafting the oral presentation using these key aspects.   
+
+Every member will ensure constructive suggestions and feedback are provided to other members for their tasks.  
+
+## Challenges anticipated  
+
+None as of right now.  
+
+## References  
+
+Citation: Wolberg,William, Mangasarian,Olvi, Street,Nick, and Street,W.. (1995). Breast Cancer Wisconsin (Diagnostic). UCI Machine Learning Repository. https://doi.org/10.24432/C5DW2B.  
+
+Link where the dataset was downloaded from: https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic  
+
+Inspiration: Street, William Nick et al. “Nuclear feature extraction for breast tumor diagnosis.” Electronic imaging (1993).  
+
+Link for the inspiration: https://minds.wisconsin.edu/bitstream/handle/1793/59692/TR1131.pdf;jsessionid=60F2C4912479BA2A5DCF2C0C770DA2F1?sequence=1  
+
