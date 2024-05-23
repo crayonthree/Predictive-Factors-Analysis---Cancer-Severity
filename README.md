@@ -8,7 +8,7 @@ Background:
 With the advent of technology, medical datasets have become more comprehensive and allow for deeper insights into factors indicating and
 influencing diseases. Cancer is one such disease, which is lethal in its later stages. Indicators of the severity (malignant or benign)
 of any tumors would be crucial for initial prognosis. This project revolves around utilizing data analysis techniques to discern patterns
-and correlations within a dataset pertaining to tumor features and their severity. The main endeavour of this project is to contribute to
+and correlations within a dataset pertaining to tumor features and their severity. The main intention of this project is to contribute to
 the understanding of tumor features, cancer progression dynamics, and potentially aiding in early detection and treatment strategies.
 
 
