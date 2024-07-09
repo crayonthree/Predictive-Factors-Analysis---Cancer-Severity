@@ -1,5 +1,5 @@
 # Predictive-Factors-Analysis---Cancer-Severity
-Project Contributors: Om Pandya (Dalhousie University), Wasi Alavi (Dalhousie University)
+Project Contributors: Abhiroop Yerramilli (Dalhousie University), Om Pandya (Dalhousie University), Wasi Alavi (Dalhousie University)
 
 This repository has all the required files and data for this project.
 
